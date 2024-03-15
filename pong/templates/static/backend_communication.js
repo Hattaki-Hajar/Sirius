@@ -1,33 +1,57 @@
-// Create a WebSocket connection
-// import {io} from "socket.io-client"
-// const socket = io('ws://localhost:8000/game/'); // Replace with your WS URL
-// import {ball, arena, paddle1, paddle2} from './game.js'
-// socket.on('connect', () => {
-//     console.log('Connected to WebSocket server');
-// });
-//
-// // Send game updates to the backend
-// export function sendBallUpdate(ballData) {
-//     socket.emit('ball_update', "test");
-// }
-//
-// // Handle game updates received from the backend
-// // socket.on('game_update', (data) => {
-// //     // Update local game state and rendering based on received data
-// //     // updateBallPosition(data.ball_position);
-// // });
-//
-// // Game loop (simplified)
-// // function animate() {
-// //     requestAnimationFrame(animate);
-// //
-// //     // ... update ball position in Three.js ...
-// //
-// //     // Send ball update to the backend at regular intervals
-// //     if (shouldSendUpdate) {
-// //         sendBallUpdate({ position: ball.position, velocity: ball.velocity });
-// //         shouldSendUpdate = false; // Reset update flag
-// //     }
-// //
-// //     renderer.render(scene, camera);
-// // }
+import {ball, paddle1, paddle2} from './game.js'
+
+// prepare data (ball and paddle position) to send to backend
+function prepareBackendData(player_nb)
+{
+	data = {
+		"ball": [ball.body.position.x, ball.body.position.z],
+		"paddle": [],
+		"paddle_height": paddle1.Height,
+		"x_factor": ball.xFactor,
+		"z_factor": ball.zFactor,
+		"speed": ball.speed
+	}
+	if (player_nb === 1)
+		data["paddle"] = [paddle1.body.position.x, paddle1.body.position.z]
+	else
+		data["paddle"] = [paddle2.body.position.x, paddle2.body.position.z]
+	return data
+}
+// connect to the server parse data and then send it, get back the response
+export function sendDataToBackend(player_nb) {
+  const data = prepareBackendData(player_nb)
+	console.log('data to send:', data)
+
+  fetch('http://localhost:8000/pong_game/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+    .then(response => {
+      if (response.ok) {
+        return response.json()
+      } else {
+        throw new Error(`Network response was not ok: ${response.status}`)
+      }
+    })
+    .then(data => {
+		updateGame(data, player_nb)
+    })
+    .catch(error => {
+      console.error('Error:', error)
+    })
+}
+// update ball properties based on the data calculated in the backend
+function updateGame(data, player_nb) {
+	ball.xFactor = data['xFactor']
+	ball.zFactor = data['zFactor']
+	ball.speed = data['speed']
+	ball.body.position.x = data['ball'][0]
+	ball.body.position.z = data['ball'][1]
+	if (player_nb === 1)
+		paddle1.score += data['score']
+	else
+		paddle2.score += data['score']
+}

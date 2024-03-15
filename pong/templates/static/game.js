@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls'
+import {sendDataToBackend} from "./backend_communication";
 
 // create renderer to display scenes using WebGL
 const renderer = new THREE.WebGLRenderer()
@@ -13,7 +14,7 @@ const scene = new THREE.Scene()
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth/ window.innerHeight, 0.1, 1000)
 const orbit = new OrbitControls(camera, renderer.domElement)
 
-camera.position.set(-10, 30, 30)
+camera.position.set(0, 40, 0)
 orbit.update()
 
 // create axes helper
@@ -98,99 +99,36 @@ if (randomNumber % 2)
 	ball.xFactor *= -1
 if (randomNumber % 4)
 	ball.zFactor *= -1
-
-// update the z position of the ball depending on the position it hit the paddle,
-// and always rotating the x position
-// function	updateZCoordinates(paddle_pos)
-// {
-// 	ball.xFactor *= -1
-// 	ball.zFactor = 0.03
-// 	let pos = paddle_pos - ball.body.position.z
-// 	if (ball.zFactor < 0.09)
-// 		ball.zFactor += 0.03 * pos
-// 	if (speed < 2.4)
-// 		ball.speed += 0.1
-// }
-// // detect collision with which paddle, if no collision is detected reset ball properties
-// function	updateBallCoordinates()
-// {
-// 	if (ball.body.position.x + ball.Radius >= paddle1.body.position.x - paddle1.Width / 2)
-// 		if (ball.body.position.z >= paddle1.body.position.z - 2.25 && ball.body.position.z <= paddle1.body.position.z + 2.25)
-// 			updateZCoordinates(paddle1.body.position.z)
-// 		else
-// 		{
-// 			ball.body.position.set(0, 0.35, 0)
-// 			ball.xFactor = 0.15
-// 			ball.zFactor = 0.03
-// 			ball.speed = 1.3
-// 		}
-// 	if (ball.body.position.x - ball.Radius <= paddle2.body.position.x + paddle1.Width / 2)
-// 		if (ball.body.position.z >= paddle2.body.position.z - 2.25 && ball.body.position.z <= paddle2.body.position.z + 2.25)
-// 			updateZCoordinates(paddle2.body.position.z)
-// 		else
-// 		{
-// 			ball.body.position.set(0, 0.35, 0)
-// 			ball.xFactor = 0.15
-// 			ball.zFactor = 0.03
-// 			ball.speed = 1.3
-// 		}
-// }
-// prepare data (ball and paddles position) to send to backend
-
-function prepareBackendData()
+let collisionDetected = 0
+// detect collision with which paddle and send data to the backend
+function	updateBallCoordinates()
 {
-console.log(ball.body.position.x, ball.body.position.z)
-	return {
-		"ball": [ball.body.position.x, ball.body.position.z, ball.Radius],
-		"paddle1": [paddle1.body.position.x, paddle1.body.position.z, paddle1.score],
-		"paddle2": [paddle2.body.position.x, paddle2.body.position.z, paddle2.score],
-		"paddle": [paddle1.Height, paddle1.Width],
-		"x_factor": ball.xFactor,
-		"z_factor": ball.zFactor,
-		"speed": ball.speed
+	if (collisionDetected)
+		return
+	if (ball.body.position.x + ball.Radius >= paddle1.body.position.x - paddle1.Width) {
+		console.log('+++++++++++++++++++++++collision detected')
+		collisionDetected = 1
+		sendDataToBackend(1)
+		setTimeout(() => {collisionDetected = 0}, 500)
+	}
+	if (ball.body.position.x - ball.Radius <= paddle2.body.position.x + paddle2.Width) {
+        console.log('-----------------------collision detected')
+		collisionDetected = 1
+		sendDataToBackend(2)
+		setTimeout(() => {collisionDetected = 0}, 500)
 	}
 }
-// connect to the server parse data and then send it, get back the response
-function sendDataToBackend() {
-  const data = prepareBackendData()
-	// console.log(data)
 
-  fetch('http://localhost:8000/pong_game/', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  })
-    .then(response => {
-      if (response.ok) {
-        return response.json()
-      } else {
-        throw new Error(`Network response was not ok: ${response.status}`)
-      }
-    })
-    .then(data => {
-      // console.log(data)
-		updateGame(data)
-    })
-    .catch(error => {
-      console.error('Error:', error)
-    })
-}
-// update ball properties based on the data calculated in the backend
-function updateGame(data) {
-	ball.xFactor = data['xFactor']
-	ball.zFactor = data['zFactor']
-	ball.speed = data['speed']
-}
+// animation loop function
 function	animate() {
 	requestAnimationFrame( animate )
 	ball.body.position.x += ball.xFactor * ball.speed
 	ball.body.position.z += ball.zFactor * ball.speed
-	if (ball.body.position.z + (ball.Radius / 2) >= arena.Height / 2 || ball.body.position.z - (ball.Radius / 2) <= -(arena.Height / 2))
+	if (ball.body.position.z + (ball.Radius) >= arena.Height / 2 || ball.body.position.z - (ball.Radius) <= -(arena.Height / 2))
 		ball.zFactor *= -1
-	// updateBallCoordinates()
-	sendDataToBackend()
+	updateBallCoordinates()
+	// if (paddle1.score === 5 || paddle2.score === 5)
+	// 	console.log('game over ***************')
 	renderer.render(scene, camera)
 }
 animate()
