@@ -44,9 +44,6 @@ class Ball {
 		this.Geometry = new THREE.SphereGeometry(this.Radius)
 		this.Material = new THREE.MeshBasicMaterial({color: 0xA94064})
 		this.body = new THREE.Mesh(this.Geometry, this.Material)
-		this.xFactor = 0.15
-		this.zFactor = 0.03
-		this.speed = 1.3
 	}
 }
 export const ball = new Ball()
@@ -93,42 +90,11 @@ function KeyDown(event) {
 		paddle2.body.position.z += 0.9
 }
 
-// randomize the first movement of the ball
-let randomNumber = Math.floor(Math.random() * 10)
-if (randomNumber % 2)
-	ball.xFactor *= -1
-if (randomNumber % 4)
-	ball.zFactor *= -1
-let collisionDetected = 0
-// detect collision with which paddle and send data to the backend
-function	updateBallCoordinates()
-{
-	if (collisionDetected)
-		return
-	if (ball.body.position.x + ball.Radius >= paddle1.body.position.x - paddle1.Width) {
-		console.log('+++++++++++++++++++++++collision detected')
-		collisionDetected = 1
-		sendDataToBackend(1)
-		setTimeout(() => {collisionDetected = 0}, 500)
-	}
-	if (ball.body.position.x - ball.Radius <= paddle2.body.position.x + paddle2.Width) {
-        console.log('-----------------------collision detected')
-		collisionDetected = 1
-		sendDataToBackend(2)
-		setTimeout(() => {collisionDetected = 0}, 500)
-	}
-}
-
 // animation loop function
 function	animate() {
 	requestAnimationFrame( animate )
-	ball.body.position.x += ball.xFactor * ball.speed
-	ball.body.position.z += ball.zFactor * ball.speed
-	if (ball.body.position.z + (ball.Radius) >= arena.Height / 2 || ball.body.position.z - (ball.Radius) <= -(arena.Height / 2))
-		ball.zFactor *= -1
-	updateBallCoordinates()
-	// if (paddle1.score === 5 || paddle2.score === 5)
-	// 	console.log('game over ***************')
+	// sendDataToBackend(1)
+	// sendDataToBackend(2)
 	renderer.render(scene, camera)
 }
 animate()
