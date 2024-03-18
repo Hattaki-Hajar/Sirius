@@ -91,27 +91,31 @@ function KeyDown(event) {
 }
 
 // establish webSocket connection
-let url = `ws://${window.location.host}/ws/socket-server/`
+let url = `ws://127.0.0.1:8000/ws/socket-server/`
+console.log("url: ", url)
 const socket = new WebSocket(url)
 socket.onopen = function (){
 	console.log('connection established')
-	socket.send('hilo')
 }
 socket.onerror = function (){
 	console.log('error')
 }
 socket.onmessage = function(e){
 	let data = JSON.parse(e.data)
-	console.log('data:', data)
 	updateGame(data)
 }
+socket.onclose = function(){
+	console.log('Connection was closed')
+}
+
 
 // animation loop function
 function	animate() {
 	requestAnimationFrame( animate )
-	console.log('here :3')
-	socket.send(JSON.stringify(prepareBackendData(1)))
-	socket.send(JSON.stringify(prepareBackendData(2)))
+	if (socket.readyState === WebSocket.OPEN) {
+		socket.send(JSON.stringify(prepareBackendData(1)));
+		socket.send(JSON.stringify(prepareBackendData(2)));
+	}
 	renderer.render(scene, camera)
 }
 animate()

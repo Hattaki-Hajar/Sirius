@@ -58,9 +58,9 @@ ball_lock = threading.Lock()
 ball = Ball()
 
 
-def frontendPortal(request):
-	collisionDetecter(data=request.data)
-	arenaHeight = request.data.get('arenaHeight')
+def frontendPortal(data):
+	collisionDetecter(data=data)
+	arenaHeight = data['arenaHeight']
 	ball.xPos += ball.xFactor * ball.speed
 	ball.zPos += ball.zFactor * ball.speed
 	if (ball.zPos + ball.radius) >= (arenaHeight / 2) or (ball.zPos - ball.radius) <= -(arenaHeight / 2):
