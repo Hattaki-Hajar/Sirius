@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls'
-import {sendDataToBackend} from "./backend_communication";
+import {sendDataToBackend, prepareBackendData, updateGame} from "./backend_communication";
 
 // create renderer to display scenes using WebGL
 const renderer = new THREE.WebGLRenderer()
@@ -90,11 +90,28 @@ function KeyDown(event) {
 		paddle2.body.position.z += 0.9
 }
 
+// establish webSocket connection
+let url = `ws://${window.location.host}/ws/socket-server/`
+const socket = new WebSocket(url)
+socket.onopen = function (){
+	console.log('connection established')
+	socket.send('hilo')
+}
+socket.onerror = function (){
+	console.log('error')
+}
+socket.onmessage = function(e){
+	let data = JSON.parse(e.data)
+	console.log('data:', data)
+	updateGame(data)
+}
+
 // animation loop function
 function	animate() {
 	requestAnimationFrame( animate )
-	// sendDataToBackend(1)
-	// sendDataToBackend(2)
+	console.log('here :3')
+	socket.send(JSON.stringify(prepareBackendData(1)))
+	socket.send(JSON.stringify(prepareBackendData(2)))
 	renderer.render(scene, camera)
 }
 animate()
