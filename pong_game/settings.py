@@ -44,11 +44,11 @@ INSTALLED_APPS = [
 ]
 
 ASGI_APPLICATION = 'pong_game.asgi.application'
-CHANNEL_LAYERS = {
-	'default': {
-		'BACKEND':'channels.layers.InMemoryChannelLayer'
-	}
-}
+# CHANNEL_LAYERS = {
+# 	'default': {
+# 		'BACKEND':'channels.layers.InMemoryChannelLayer'
+# 	}
+# }
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -124,8 +124,7 @@ USE_I18N = True
 USE_TZ = True
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:41221",
-	"http://localhost:37661"
+    "http://localhost:1234",
 ]
 
 # Static files (CSS, JavaScript, Images)

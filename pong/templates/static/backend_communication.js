@@ -1,5 +1,4 @@
 import {arena, ball, paddle1, paddle2} from './game.js'
-
 // prepare paddle position and geometry to send to backend
 export function prepareBackendData(player_nb)
 {
@@ -22,35 +21,12 @@ export function prepareBackendData(player_nb)
 		}
 	return data
 }
-// connect to the server parse data and then send it, get back the response
-export function sendDataToBackend(player_nb) {
-  const data = prepareBackendData(player_nb)
 
-  fetch('http://localhost:8000/pong_game/', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  })
-    .then(response => {
-      if (response.ok) {
-        return response.json()
-      } else {
-        throw new Error(`Network response was not ok: ${response.status}`)
-      }
-    })
-    .then(data => {
-		updateGame(data, player_nb)
-    })
-    .catch(error => {
-      console.error('Error:', error)
-    })
-}
 // update ball position based on the data calculated in the backend
 export function updateGame(data) {
+	// console.log('data from backend:', data)
 	ball.body.position.x = data['ballXPos']
 	ball.body.position.z = data['ballZPos']
-	console.log('ballX: ', ball.body.position.x)
-	console.log('ballZ: ', ball.body.position.z)
+	paddle1.body.position.z = data['player1ZPos']
+	paddle2.body.position.z = data['player2ZPos']
 }

@@ -73,49 +73,61 @@ export const paddle2 = new Paddle()
 paddle2.body.position.x = -(arena.Width / 2)
 paddle2.body.rotation.x = 0.5 * Math.PI
 scene.add(paddle2.body)
-
+let socket
+async function connectToWebSocket() {
+	try {
+		let url = `ws://127.0.0.1:8000/ws/socket-server/`
+		socket = new WebSocket(url)
+		await socket.onopen;
+		console.log('WebSocket connection established')
+		socket.onmessage = function(e) {
+			let data = JSON.parse(e.data)
+			updateGame(data)
+		}
+	socket.onerror = function (error) {
+		console.error('WebSocket error:', error);
+	}
+	socket.onclose = function() {
+		console.log('Connection was closed');
+	}
+	} catch (error) {
+		console.error('WebSocket connection error:', error);
+	}
+}
+connectToWebSocket()
 // listen on keydown
 document.addEventListener('keydown', KeyDown)
-
 // move certain paddle in certain position depending on the key pressed
 function KeyDown(event) {
 	let keycode = event.which
-	if (keycode == 39 && paddle1.body.position.z - (paddle1.Height / 2) > -(arena.Height / 2))
-		paddle1.body.position.z -= 0.9
-	else if (keycode == 37 && paddle1.body.position.z + (paddle1.Height / 2) < arena.Height / 2)
-		paddle1.body.position.z += 0.9
-	else if (keycode == 65 && paddle2.body.position.z -(paddle1.Height / 2) > -arena.Height / 2)
-		paddle2.body.position.z -= 0.9
-	else if (keycode == 68 && paddle2.body.position.z + (paddle1.Height / 2) < arena.Height / 2)
-		paddle2.body.position.z += 0.9
+	let data = {'nb': 0, 'direction': ''}
+	if (keycode == 39 && paddle1.body.position.z - (paddle1.Height / 2) - 0.9 > -(arena.Height / 2))
+	{
+		data['nb'] = 1
+		data["direction"] = 'down'
+	}
+	else if (keycode == 37 && paddle1.body.position.z + (paddle1.Height / 2) + 0.9 < arena.Height / 2)
+	{
+		data['nb'] = 1
+		data["direction"] = 'up'
+	}
+	else if (keycode == 65 && paddle2.body.position.z - (paddle1.Height / 2) - 0.9 > -arena.Height / 2)
+	{
+		data['nb'] = 2
+		data["direction"] = 'down'
+	}
+	else if (keycode == 68 && paddle2.body.position.z + (paddle1.Height / 2) + 0.9 < arena.Height / 2)
+	{
+		data['nb'] = 2
+		data["direction"] = 'up'
+	}
+	if (socket.readyState === WebSocket.OPEN)
+		socket.send(JSON.stringify(data))
 }
-
-// establish webSocket connection
-let url = `ws://127.0.0.1:8000/ws/socket-server/`
-console.log("url: ", url)
-const socket = new WebSocket(url)
-socket.onopen = function (){
-	console.log('connection established')
-}
-socket.onerror = function (){
-	console.log('error')
-}
-socket.onmessage = function(e){
-	let data = JSON.parse(e.data)
-	updateGame(data)
-}
-socket.onclose = function(){
-	console.log('Connection was closed')
-}
-
 
 // animation loop function
 function	animate() {
 	requestAnimationFrame( animate )
-	if (socket.readyState === WebSocket.OPEN) {
-		socket.send(JSON.stringify(prepareBackendData(1)));
-		socket.send(JSON.stringify(prepareBackendData(2)));
-	}
 	renderer.render(scene, camera)
 }
 animate()
