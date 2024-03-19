@@ -8,7 +8,7 @@ import random
 def updateBallProperties(game, collision):
 	game.ball.xFactor *= -1
 	game.ball.zFactor += (0.03 * collision)
-	if game.ball.speed <= 2.4:
+	if game.ball.speed <= 2:
 		game.ball.speed += 0.1
 
 
@@ -22,7 +22,7 @@ def collisionCalculator(game, player):
 		game.ball.speed = 1.3
 		game.ball.xFactor = 0.1
 		game.ball.zFactor = 0.03
-		player.score += 1
+		player.score -= 1
 
 
 # determine the presence of collision and update ball properties
@@ -49,22 +49,24 @@ class Ball:
 		xFactor *= -1
 	speed = 1.3
 
-class Player:
+class Player():
 	def __init__(self, nb):
 		self.zPos = 0
 		self.xPos = 15
 		if nb == 2:
 			self.xPos *= -1
-		self.score = 0
+		self.score = 5
 		self.Height = 4.5
 		self.Width = 1
+		# self.ID = ID
 
 class Game:
-	ball = Ball()
-	player1 = Player(1)
-	player2 = Player(2)
-	arenaHeight = 22.5
-	arenaWidth = 30
+	def	__init__(self):
+		self.ball = Ball()
+		self.player1 = Player(1)
+		self.player2 = Player(2)
+		self.arenaHeight = 22.5
+		self.arenaWidth = 30
 
 
 class gameManager:
@@ -83,7 +85,11 @@ class gameManager:
 				self.game.ball.zFactor *= -1
 			data = {'ballXPos': self.game.ball.xPos, 'ballZPos': self.game.ball.zPos,
  					'player1ZPos': self.game.player1.zPos, 'player2ZPos': self.game.player2.zPos}
-			await self.send_game_update(data)
+			if self.game.player1.score == 0 or self.game.player2.score == 0:
+				# print('game over!')
+				self.game.ball.speed = 1.3
+			print('here in gameloop')
+			await self.consumer.sendUpdate(data)
 			await asyncio.sleep(0.01)
 
 	async def send_game_update(self, data):

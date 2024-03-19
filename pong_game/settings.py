@@ -44,11 +44,11 @@ INSTALLED_APPS = [
 ]
 
 ASGI_APPLICATION = 'pong_game.asgi.application'
-# CHANNEL_LAYERS = {
-# 	'default': {
-# 		'BACKEND':'channels.layers.InMemoryChannelLayer'
-# 	}
-# }
+CHANNEL_LAYERS = {
+	'default': {
+		'BACKEND':'channels.layers.InMemoryChannelLayer'
+	}
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

@@ -1,0 +1,5 @@
+pong/__pycache__
+pong_game/__pycache__
+pong/migrations/__pycache__
+pong/templates/dist
+pong/templates/.parcel-cache
