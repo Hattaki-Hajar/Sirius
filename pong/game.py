@@ -7,7 +7,7 @@ import random
 # change x direction and add speed
 def updateBallProperties(game, collision):
 	game.ball.xFactor *= -1
-	game.ball.zFactor += (0.03 * collision)
+	game.ball.zFactor += (0.0015 * collision)
 	if game.ball.speed <= 2:
 		game.ball.speed += 0.1
 
@@ -20,8 +20,8 @@ def collisionCalculator(game, player):
 		game.ball.xPos = 0
 		game.ball.zPos = 0
 		game.ball.speed = 1.3
-		game.ball.xFactor = 0.1
-		game.ball.zFactor = 0.03
+		game.ball.xFactor = 0.015
+		game.ball.zFactor = 0.0015
 		player.score -= 1
 
 
@@ -41,8 +41,8 @@ class Ball:
 	xPos = 0
 	zPos = 0
 	radius = 0.425
-	zFactor = 0.03
-	xFactor = 0.1
+	zFactor = 0.0015
+	xFactor = 0.015
 	if random.randint(0, 10) % 4:
 		zFactor *= -1
 	if random.randint(0, 10) % 2:
@@ -56,25 +56,26 @@ class Player():
 		if nb == 2:
 			self.xPos *= -1
 		self.score = 5
-		self.Height = 4.5
+		self.Height = 4
 		self.Width = 1
-		# self.ID = ID
 
 class Game:
 	def	__init__(self):
 		self.ball = Ball()
 		self.player1 = Player(1)
 		self.player2 = Player(2)
-		self.arenaHeight = 22.5
+		self.arenaHeight = 22
 		self.arenaWidth = 30
 
 
 class gameManager:
-	def __init__(self, Gameconsumer):
+	def __init__(self, Gameconsumer, gameID):
 		self.game = Game()
 		self.consumer = Gameconsumer
+		self.gameID = gameID
 
 	async def gameLoop(self):
+		await asyncio.sleep(0.5)
 		while True:
 			collisionDetecter(self.game, 1)
 			collisionDetecter(self.game, 2)
@@ -86,11 +87,9 @@ class gameManager:
 			data = {'ballXPos': self.game.ball.xPos, 'ballZPos': self.game.ball.zPos,
  					'player1ZPos': self.game.player1.zPos, 'player2ZPos': self.game.player2.zPos}
 			if self.game.player1.score == 0 or self.game.player2.score == 0:
-				# print('game over!')
 				self.game.ball.speed = 1.3
-			print('here in gameloop')
-			await self.consumer.sendUpdate(data)
-			await asyncio.sleep(0.01)
+			await self.consumer.sendUpdate(data, self.gameID)
+			await asyncio.sleep(0.001)
 
 	async def send_game_update(self, data):
 		await self.consumer.send(text_data=json.dumps(data))
