@@ -1,7 +1,6 @@
 import asyncio
 import json
 import random
-# Create your views here.
 
 # increment zfactor depending on ball and paddle collision
 # change x direction and add speed
@@ -11,7 +10,8 @@ def updateBallProperties(game, collision):
 	if game.ball.speed <= 2:
 		game.ball.speed += 0.1
 
-
+# if collision is detected between ball and paddle call updateBallProperties
+# else reset ball properties and position
 def collisionCalculator(game, player):
 	collision = game.ball.zPos - player.zPos
 	if (collision <= (player.Height / 2)) and (collision >= -(player.Height / 2)):
@@ -22,6 +22,10 @@ def collisionCalculator(game, player):
 		game.ball.speed = 1.3
 		game.ball.xFactor = 0.015
 		game.ball.zFactor = 0.0015
+		if random.randint(0, 10) % 4:
+			game.ball.zFactor *= -1
+		if random.randint(0, 10) % 2:
+			game.ball.xFactor *= -1
 		player.score -= 1
 
 
@@ -36,7 +40,7 @@ def collisionDetecter(game, nb):
 		if game.ball.xPos - game.ball.radius <= game.player2.xPos + paddleWidth:
 			collisionCalculator(game, game.player2)
 
-
+# Ball class to store ball properties and randomize the direction of the ball
 class Ball:
 	xPos = 0
 	zPos = 0
@@ -49,6 +53,7 @@ class Ball:
 		xFactor *= -1
 	speed = 1.3
 
+# Player class to store player properties and position its paddle depending on player number
 class Player():
 	def __init__(self, nb):
 		self.zPos = 0
@@ -59,6 +64,7 @@ class Player():
 		self.Height = 4
 		self.Width = 1
 
+# game class to store game properties
 class Game:
 	def	__init__(self):
 		self.ball = Ball()
@@ -67,7 +73,7 @@ class Game:
 		self.arenaHeight = 22
 		self.arenaWidth = 30
 
-
+# gameManager class to manage the game loop and send game updates
 class gameManager:
 	def __init__(self, Gameconsumer, gameID):
 		self.game = Game()
