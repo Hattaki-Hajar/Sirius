@@ -89,7 +89,7 @@ class gameManager:
 			if self.game.player1.score == 0 or self.game.player2.score == 0:
 				self.game.ball.speed = 1.3
 			await self.consumer.sendUpdate(data, self.gameID)
-			await asyncio.sleep(0.001)
+			await asyncio.sleep(0.0005)
 
 	async def send_game_update(self, data):
 		await self.consumer.send(text_data=json.dumps(data))

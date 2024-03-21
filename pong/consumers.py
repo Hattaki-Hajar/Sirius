@@ -7,23 +7,19 @@ from channels.layers import get_channel_layer
 
 games_lock = asyncio.Lock()
 games = {}
+lobby = []
 
 class GameConsumer(AsyncWebsocketConsumer):
-	group_name = str(uuid.uuid4())
-	print('group name:', group_name)
+	# group_name = str(uuid.uuid4())
+	# print('group name:', group_name)
 	def __init__(self):
 		self.groups = []
-		self.connectedPlayers = 0
 
 	async def connect(self):
-		print("connect")
 		self.channel_layer = get_channel_layer()
 		await self.accept()
-		await self.channel_layer.group_add(self.group_name, self.channel_name)
-		await self.channel_layer.group_send(
-			self.group_name,
-			{"type": "playerCountUpdate", "count": 1}
-		)
+		lobby.append(self)
+		await self.check_game()
 
 	async def getGroupName(self):
 		for group, channel_names in self.channel_layer.groups.items():
@@ -31,6 +27,27 @@ class GameConsumer(AsyncWebsocketConsumer):
 				return group
 		return None
 
+	async def check_game(self):
+		if len(lobby) >= 2:
+			await self.start_game()
+
+	async def start_game(self):
+		player1 = lobby.pop(0)
+		player2 = lobby.pop(0)
+		group_name = str(uuid.uuid4())
+		group = group_name
+		games[group] = gameManager(self, group)
+		await self.channel_layer.group_add(group, player1.channel_name)
+		await self.channel_layer.group_add(group, player2.channel_name)
+		await player1.sendPlayerNumber({'playerNb': 1}, player1.channel_name)
+		await player2.sendPlayerNumber({'playerNb': 2}, player2.channel_name)
+		asyncio.create_task(games[group].gameLoop())
+
+	async def sendPlayerNumber(self, data, channel_name):
+		await self.channel_layer.send(
+			channel_name,
+			{"type": "playerUpdate", "data": data}
+		)
 	async def receive(self, text_data):
 		try:
 			data = json.loads(text_data)
@@ -38,8 +55,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 			print("Invalid JSON data received:", text_data)
 			return
 		group = await self.getGroupName()
-		print(group, ':*****')
-		print('games', games)
 		if group in games:
 			arenaHeight = games[group].game.arenaHeight
 			is_player_one = self.channel_name == list(self.channel_layer.groups[group])[0]
@@ -54,7 +69,6 @@ class GameConsumer(AsyncWebsocketConsumer):
 				elif data["direction"] == "down" and games[group].game.player2.zPos + 1 <= (arenaHeight / 2):
 					games[group].game.player2.zPos += 1
 
-
 	async def	sendUpdate(self, data, gameID):
 		await self.channel_layer.group_send(
 			gameID,
@@ -65,38 +79,10 @@ class GameConsumer(AsyncWebsocketConsumer):
 		data = event["data"]
 		await self.send(text_data=json.dumps(data))
 
-
-	async def playerCountUpdate(self, event):
-		self.connectedPlayers += event["count"]
-		if self.connectedPlayers == 2:
-			print('in connected players')
-			games[self.group_name] = gameManager(self, self.group_name)
-			player1_channel_name = list(self.channel_layer.groups[self.group_name])[0]
-			player2_channel_name = list(self.channel_layer.groups[self.group_name])[1]
-			if self.channel_name == player1_channel_name:
-				games[self.group_name].player1 = self
-				asyncio.create_task(self.sendPlayerNumber({'playerNb': 1}, player1_channel_name))
-				asyncio.create_task(self.sendPlayerNumber({'playerNb': 2}, player2_channel_name))
-			else:
-				games[self.group_name].player2 = self
-				asyncio.create_task(self.sendPlayerNumber({'playerNb': 1}, player1_channel_name))
-				asyncio.create_task(self.sendPlayerNumber({'playerNb': 2}, player2_channel_name))
-			asyncio.create_task(games[self.group_name].gameLoop())
-			self.connectedPlayers = 0
-			self.group_name = str(uuid.uuid4())
-
-	async def sendPlayerNumber(self, data, channel_name):
-		await self.channel_layer.send(
-			channel_name,
-			{"type": "playerUpdate", "data": data}
-		)
-
 	async def	playerUpdate(self, event):
 		data = event["data"]
 		await self.send(text_data=json.dumps(data))
 
 	async def disconnect(self, code):
 		print('disconnected')
-
 		return await super().disconnect(code)
-	

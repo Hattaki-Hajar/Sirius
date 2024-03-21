@@ -95,6 +95,7 @@ function KeyDown(event) {
 			if (data["direction"] === '')
 				if (paddle.body.position.z + paddleHeightHalf < arenaHeightHalf)
 				{
+					console.log("up")
 					data["direction"] = 'down'
 					socket.send(JSON.stringify(data))
 				}
@@ -104,6 +105,7 @@ function KeyDown(event) {
 			if (data["direction"] === '')
 				if (paddle.body.position.z - paddleHeightHalf > -arenaHeightHalf)
 				{
+					console.log("down")
 					data["direction"] = 'up'
 					socket.send(JSON.stringify(data))
 				}
