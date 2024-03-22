@@ -20,5 +20,4 @@ from pong import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # path('pong_game/', views.frontendPortal, name='game')
 ]

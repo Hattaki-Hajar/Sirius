@@ -1,28 +1,10 @@
-import {arena, ball, paddle1, paddle2} from './game.js'
-// prepare paddle position and geometry to send to backend
-export function prepareBackendData(player_nb)
-{
-	let data = {}
-	if (player_nb === 1)
-		data = {
-			"paddleXPos": paddle1.body.position.x,
-			"paddleZPos": paddle1.body.position.z,
-			"paddleHeight": paddle1.Height,
-			"paddleWidth": paddle1.Width,
-			"arenaHeight": arena.Height,
-		}
-	else
-		data = {
-			"paddleXPos": paddle2.body.position.x,
-			"paddleZPos": paddle2.body.position.z,
-			"paddleHeight": paddle2.Height,
-			"paddleWidth": paddle2.Width,
-			"arenaHeight": arena.Height,
-		}
-	return data
-}
+import {arena, ball, paddle1, paddle2, audioLoader, sound} from './game.js'
 
 export let socket
+/**
+ * Connects to the WebSocket server.
+ * @returns {Promise<void>} A promise that resolves when the WebSocket connection is established.
+ */
 export async function connectToWebSocket() {
 	try {
 		let url = `ws://127.0.0.1:8000/ws/socket-server/`
@@ -48,8 +30,13 @@ export let playerNb
 export function updateGame(data) {
 	if (data['playerNb'])
 	{
-		console.log('playerNb', data)
 		playerNb = data['playerNb']
+		// audioLoader.load('/static/eva.mp3', function( buffer ) {
+		// 	sound.setBuffer(buffer)
+		// 	sound.setLoop(true)
+		// 	sound.setVolume(0.5)
+		// 	sound.play()
+		// })
 	}
 	if (data['ballXPos'])
 		ball.body.position.x = data['ballXPos']

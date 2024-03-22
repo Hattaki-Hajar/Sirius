@@ -17,17 +17,18 @@ def collisionCalculator(game, player):
 	if (collision <= (player.Height / 2)) and (collision >= -(player.Height / 2)):
 		updateBallProperties(game, collision)
 	else:
-		game.ball.xPos = 0
-		game.ball.zPos = 0
-		game.ball.speed = 1.3
-		game.ball.xFactor = 0.015
-		game.ball.zFactor = 0.0015
-		if random.randint(0, 10) % 4:
-			game.ball.zFactor *= -1
-		if random.randint(0, 10) % 2:
-			game.ball.xFactor *= -1
-		player.score -= 1
-
+		if (player.xPos > 0 and game.ball.xPos + game.ball.radius >= player.xPos)\
+			or (player.xPos < 0 and game.ball.xPos - game.ball.radius <= player.xPos):
+			game.ball.xPos = 0
+			game.ball.zPos = 0
+			game.ball.speed = 1.3
+			game.ball.xFactor = 0.015
+			game.ball.zFactor = 0.0015
+			if random.randint(0, 10) % 4:
+				game.ball.zFactor *= -1
+			if random.randint(0, 10) % 2:
+				game.ball.xFactor *= -1
+			player.score -= 1
 
 # determine the presence of collision and update ball properties
 # if no collision is present reset ball properties and position
