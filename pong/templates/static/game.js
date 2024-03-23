@@ -1,8 +1,11 @@
 import * as THREE from 'three'
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls'
-import {connectToWebSocket, socket, playerNb} from "./backend_communication";
+import {Arena} from "./arena.js"
+import {Paddle} from "./paddle.js"
+import {Ball} from "./ball.js"
+import {connectToWebSocket, socket} from "./socket.js";
+import stars from '../assets/stars0.jpg'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader'
-import meteors from '../assets/stars.moon.jpg'
 
 // create renderer to display scenes using WebGL
 const renderer = new THREE.WebGLRenderer()
@@ -14,118 +17,75 @@ window.addEventListener("resize",()=>{
 })
 document.body.appendChild(renderer.domElement)
 
-const scene = new THREE.Scene()
+export const scene = new THREE.Scene()
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth/ window.innerHeight, 0.1, 1000)
 const orbit = new OrbitControls(camera, renderer.domElement)
 
 camera.position.set(0, 40, 30)
 orbit.update()
 
-// const cubeTextureLoader = new THREE.CubeTextureLoader()
-// scene.background = cubeTextureLoader.load([
-// 	meteors,
-// 	meteors,
-// 	meteors,
-// 	meteors,
-// 	meteors,
-// 	meteors
-// ])
+// add background to the scene
+const cubeTextureLoader = new THREE.CubeTextureLoader()
+scene.background = cubeTextureLoader.load([
+	stars,
+	stars,
+	stars,
+	stars,
+	stars,
+	stars
+])
 
-const textureLoader = new THREE.TextureLoader();
-const backgroundTexture = textureLoader.load(meteors);
+// add light from each player side to the scene
+const light = new THREE.DirectionalLight(0xFFFFFF)
+scene.add(light)
+light.position.y += 15
+light.position.x += 10
+light.intensity = 3
+const light2 = new THREE.DirectionalLight(0xFFFFFF)
+scene.add(light2)
+light2.position.y += 15
+light2.position.x -= 10
+light2.intensity = 3
 
-// Create a sphere geometry
-const sphereGeometry = new THREE.SphereGeometry(500, 60, 40); // Adjust radius as needed
+// add loader for gltf files
+export const loader = new GLTFLoader()
 
-// Create a material using the texture
-const sphereMaterial = new THREE.MeshBasicMaterial({
-  map: backgroundTexture,
-  side: THREE.BackSide // Ensure texture is visible from inside the sphere
-});
-
-// Create the mesh
-const backgroundSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-
-// Add the sphere to the scene
-scene.add(backgroundSphere);
-
-// create the arena
-class Arena {
-	constructor() {
-		this.Height = 22
-		this.Width = 30
-		this.Geometry = new THREE.PlaneGeometry(this.Width, this.Height)
-		this.Material = new THREE.MeshStandardMaterial({color: 0xFFFFFF, side: THREE.DoubleSide})
-		this.body = new THREE.Mesh(this.Geometry, this.Material)
-	}
-}
-export const arena = new Arena()
-// rotating the arena
-arena.body.rotation.x = 0.5 * Math.PI
+// create game components
+export const arena = new Arena(scene)
+export const paddle1 = new Paddle(scene, 1)
+export const paddle2 = new Paddle(scene, 2)
+export const ball = new Ball()
+scene.add(ball.body)
+scene.add(paddle1.body)
+scene.add(paddle2.body)
 scene.add(arena.body)
 
-// add textures to the arena and the ball
-const arenaTexture = new URL('../assets/arena.glb', import.meta.url)
-const loader = new GLTFLoader()
-loader.load(arenaTexture.href, function(gltf) {
+// add earth and ship to the scene
+const earthTexture = new URL('../assets/earth.glb', import.meta.url)
+loader.load(earthTexture.href, function(gltf) {
 	const model = gltf.scene
-	model.rotation.x = 0.5 * Math.PI
-	model.scale.set(15, 12, 1)
+	model.position.y = 20
+	model.position.x = 40
+	model.rotation.x = Math.PI / 3
+	model.scale.set(50, 50, 50)
 	scene.add(model)
 }, undefined, function(error) {
 	console.error(error)
 })
 
-// const ballTexture = new URL('../assets/ball.glb', import.meta.url)
-// loader.load(ballTexture.href, function(gltf) {
-// 	const model = gltf.scene
-// 	model.position.y = -1
-// 	scene.add(model)
-// }, undefined, function(error) {
-// 	console.error(error)
-// })
-// create the ball
-class Ball {
-	constructor() {
-		this.Radius = 0.425
-		this.Geometry = new THREE.SphereGeometry(this.Radius)
-		this.Material = new THREE.MeshStandardMaterial({color: 0xA94064})
-		this.body = new THREE.Mesh(this.Geometry, this.Material)
-	}
-}
-export const ball = new Ball()
-// add ball radius to lift the ball to the arena
-ball.body.position.y = ball.Radius
-scene.add(ball.body)
-
-// create paddles
-class Paddle {
-	constructor() {
-		this.Width = 1
-		this.Height = 4
-		this.Geometry = new THREE.BoxGeometry(this.Width, this.Height)
-		this.Material = new THREE.MeshStandardMaterial({color: 0x8B0000})
-		this.body = new THREE.Mesh(this.Geometry, this.Material)
-		this.score = 0
-	}
-}
-export const paddle1 = new Paddle()
-// place paddle in the middle right of the arena and rotate it
-paddle1.body.position.x = arena.Width / 2
-paddle1.body.rotation.x = 0.5 * Math.PI
-scene.add(paddle1.body)
-
-export const paddle2 = new Paddle()
-// place paddle in the middle left of the arena and rotate it
-paddle2.body.position.x = -(arena.Width / 2)
-paddle2.body.rotation.x = 0.5 * Math.PI
-scene.add(paddle2.body)
-
-// add light to the scene
-const light = new THREE.DirectionalLight(0xFFFFFF)
-scene.add(light)
-light.position.y += 10
-light.intensity = 3
+const shipTexture = new URL('../assets/ship.glb', import.meta.url)
+loader.load(shipTexture.href, function(gltf) {
+	const model = gltf.scene
+	model.position.x = -50
+	model.position.z = 30
+	model.position.y = -10
+	model.rotation.y = Math.PI / 2
+	model.rotation.z = -Math.PI / 3
+	model.scale.set(100, 100, 100)
+	scene.add(model)
+}, undefined, function(error) {
+	console.error(error)
+})
 
 // connect to the WebSocket server
 connectToWebSocket()
@@ -137,6 +97,7 @@ document.addEventListener('keydown', KeyDown)
 function KeyDown(event) {
 	let keycode = event.which
 	let data = {'direction': ''}
+	const playerNb = paddle1.playerNb
 	
 	if (playerNb)
 	{

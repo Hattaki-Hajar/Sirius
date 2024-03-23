@@ -56,10 +56,10 @@ class Ball:
 
 # Player class to store player properties and position its paddle depending on player number
 class Player():
-	def __init__(self, nb):
+	def __init__(self, playerNb):
 		self.zPos = 0
 		self.xPos = 15
-		if nb == 2:
+		if playerNb == 2:
 			self.xPos *= -1
 		self.score = 5
 		self.Height = 4

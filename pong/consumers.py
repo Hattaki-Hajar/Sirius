@@ -5,7 +5,6 @@ from .game import gameManager
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.layers import get_channel_layer
 
-games_lock = asyncio.Lock()
 games = {}
 lobby = []
 
@@ -18,35 +17,30 @@ class GameConsumer(AsyncWebsocketConsumer):
 		self.channel_layer = get_channel_layer()
 		await self.accept()
 		lobby.append(self)
-		await self.check_game()
+		await self.startGame()
 
 	# This method iterates through the channel layer's groups and checks if the current channel name
 	# is present in any of the channel names associated with a group. If a match is found, the group
 	# name is returned. If no match is found, None is returned.
-	async def getGroupName(self):
+	async def getGroup(self):
 		for group, channel_names in self.channel_layer.groups.items():
 			if self.channel_name in channel_names:
 				return group
 		return None
-	
-	# Check if there are enough players to start a game
-	async def check_game(self):
-		if len(lobby) >= 2:
-			await self.start_game()
 
 	# generate a new group name create a new game and add the players to the game group,
 	#  and start the game loop
-	async def start_game(self):
-		player1 = lobby.pop(0)
-		player2 = lobby.pop(0)
-		group_name = str(uuid.uuid4())
-		group = group_name
-		games[group] = gameManager(self, group)
-		await self.channel_layer.group_add(group, player1.channel_name)
-		await self.channel_layer.group_add(group, player2.channel_name)
-		await player1.sendPlayerNumber({'playerNb': 1}, player1.channel_name)
-		await player2.sendPlayerNumber({'playerNb': 2}, player2.channel_name)
-		asyncio.create_task(games[group].gameLoop())
+	async def startGame(self):
+		if len(lobby) >= 2:
+			player1 = lobby.pop(0)
+			player2 = lobby.pop(0)
+			group_name = str(uuid.uuid4())
+			games[group_name] = gameManager(self, group_name)
+			await self.channel_layer.group_add(group_name, player1.channel_name)
+			await self.channel_layer.group_add(group_name, player2.channel_name)
+			await player1.sendPlayerNumber({'playerNb': 1}, player1.channel_name)
+			await player2.sendPlayerNumber({'playerNb': 2}, player2.channel_name)
+			asyncio.create_task(games[group_name].gameLoop())
 
 	# send the player numbers to the clients
 	async def sendPlayerNumber(self, data, channel_name):
@@ -66,7 +60,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 		except json.JSONDecodeError:
 			print("Invalid JSON data received:", text_data)
 			return
-		group = await self.getGroupName()
+		group = await self.getGroup()
 		if group in games:
 			arenaHeight = games[group].game.arenaHeight
 			is_player_one = self.channel_name == list(self.channel_layer.groups[group])[0]
