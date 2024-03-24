@@ -28,7 +28,7 @@ def collisionCalculator(game, player):
 				game.ball.zFactor *= -1
 			if random.randint(0, 10) % 2:
 				game.ball.xFactor *= -1
-			player.score -= 1
+			player.score += 1
 
 # determine the presence of collision and update ball properties
 # if no collision is present reset ball properties and position
@@ -61,7 +61,7 @@ class Player():
 		self.xPos = 15
 		if playerNb == 2:
 			self.xPos *= -1
-		self.score = 5
+		self.score = 0
 		self.Height = 4
 		self.Width = 1
 
@@ -93,8 +93,10 @@ class gameManager:
 				self.game.ball.zFactor *= -1
 			data = {'ballXPos': self.game.ball.xPos, 'ballZPos': self.game.ball.zPos,
  					'player1ZPos': self.game.player1.zPos, 'player2ZPos': self.game.player2.zPos}
-			if self.game.player1.score == 0 or self.game.player2.score == 0:
-				self.game.ball.speed = 1.3
+			if self.game.player1.score == 5 or self.game.player2.score == 5:
+				scores = {'player1Score': self.game.player1.score, 'player2Score': self.game.player2.score}
+				await self.consumer.gameOver(scores, self.gameID)
+				return
 			await self.consumer.sendUpdate(data, self.gameID)
 			await asyncio.sleep(0.0005)
 

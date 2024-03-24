@@ -73,14 +73,28 @@ loader.load(earthTexture.href, function(gltf) {
 	console.error(error)
 })
 
-const shipTexture = new URL('../assets/ship.glb', import.meta.url)
+const shipTexture = new URL('../assets/ship2.glb', import.meta.url)
 loader.load(shipTexture.href, function(gltf) {
+	const model = gltf.scene
+	model.position.x = -70
+	model.position.z = -30
+	model.position.y = -10
+	model.rotation.y = Math.PI / 2
+	model.rotation.z = -Math.PI / 3
+	scene.add(model)
+}, undefined, function(error) {
+	console.error(error)
+})
+
+const ship2Texture = new URL('../assets/ship.glb', import.meta.url)
+loader.load(ship2Texture.href, function(gltf) {
 	const model = gltf.scene
 	model.position.x = -50
 	model.position.z = 30
 	model.position.y = -10
 	model.rotation.y = Math.PI / 2
 	model.rotation.z = -Math.PI / 3
+	model.rotation.x = Math.PI / 3
 	model.scale.set(100, 100, 100)
 	scene.add(model)
 }, undefined, function(error) {
@@ -110,7 +124,6 @@ function KeyDown(event) {
 			if (data["direction"] === '')
 				if (paddle.body.position.z + paddleHeightHalf < arenaHeightHalf)
 				{
-					console.log("up")
 					data["direction"] = 'down'
 					socket.send(JSON.stringify(data))
 				}
@@ -120,7 +133,6 @@ function KeyDown(event) {
 			if (data["direction"] === '')
 				if (paddle.body.position.z - paddleHeightHalf > -arenaHeightHalf)
 				{
-					console.log("down")
 					data["direction"] = 'up'
 					socket.send(JSON.stringify(data))
 				}

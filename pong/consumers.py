@@ -87,6 +87,28 @@ class GameConsumer(AsyncWebsocketConsumer):
 		data = event["data"]
 		await self.send(text_data=json.dumps(data))
 
+	# send the scores to the clients
+	async def gameOver(self, scores, gameID):
+		await self.channel_layer.group_send(
+			gameID,
+			{"type": "sendScores", "data": scores}
+		)
+
+	async def sendScores(self, event):
+		data = event["data"]
+		await self.send(text_data=json.dumps(data))
+		await self.close()
+
+	# disconnect the client and send the game over message to the clients
 	async def disconnect(self, code):
-		print('disconnected')
+		group = await self.getGroup()
+		await self.channel_layer.group_send(
+			group,
+			{"type": "forfeit", "data": {"won": "You won by forfeit"}}
+		)
 		return await super().disconnect(code)
+	
+	async def forfeit(self, event):
+		data = event["data"]
+		await self.send(text_data=json.dumps(data))
+		await self.close()
