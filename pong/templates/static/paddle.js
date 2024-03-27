@@ -89,12 +89,16 @@ export class Paddle {
 			loader.load(this.scores[score].href, (gltf) => {
 				this.scoreModel = gltf.scene
 				this.scoreModel.position.x = 15
-				if (nb === 2)
-					this.scoreModel.position.x = -15
 				this.scoreModel.position.z = 0
 				this.scoreModel.position.y = 3
 				this.scoreModel.scale.set(2, 2, 2)
 				this.scoreModel.rotation.y = Math.PI / 2
+				if (nb === 2)
+				{
+					this.scoreModel.position.x = -15
+					this.scoreModel.rotation.y = -Math.PI / 2
+				
+				}
 				scene.add(this.scoreModel)
 			}, undefined, function (error) {
 				console.error(error)
