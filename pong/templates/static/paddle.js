@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { loader, arena } from "./game.js"
+import { loader, arena, scene } from "./game.js"
 
 // create paddles
 export class Paddle {
@@ -11,7 +11,14 @@ export class Paddle {
 		this.body = new THREE.Mesh(this.Geometry, this.Material)
 		this.score = 0
 		this.model = null
+		this.scoreModel = null
 		const paddleTexture = new URL('../assets/container.glb', import.meta.url)
+		const zero = new URL('../assets/zero.glb', import.meta.url)
+		const one = new URL('../assets/one.glb', import.meta.url)
+		const two = new URL('../assets/two.glb', import.meta.url)
+		const three = new URL('../assets/three.glb', import.meta.url)
+		const four = new URL('../assets/four.glb', import.meta.url)
+		this.scores = [zero, one, two, three, four]
 		this.playerNb = 0
 
 		if (playerNb === 1) {
@@ -28,7 +35,18 @@ export class Paddle {
 				scene.add(this.model)
 			}, undefined, function (error) {
 				console.error(error)
-			});
+			})
+			loader.load(this.scores[0].href, (gltf) => {
+				this.scoreModel = gltf.scene
+				this.scoreModel.position.x = 15
+				this.scoreModel.position.z = 0
+				this.scoreModel.position.y = 3
+				this.scoreModel.scale.set(2, 2, 2)
+				this.scoreModel.rotation.y = Math.PI / 2
+				scene.add(this.scoreModel)
+			}, undefined, function (error) {
+				console.error(error)
+			})
 		} else {
 			// place paddle in the middle left of the arena and rotate it
 			this.body.position.x = -(arena.Width / 2)
@@ -43,7 +61,18 @@ export class Paddle {
 				scene.add(this.model)
 			}, undefined, function (error) {
 				console.error(error)
-			});
+			})
+			loader.load(this.scores[0].href, (gltf) => {
+				this.scoreModel = gltf.scene
+				this.scoreModel.position.x = -15
+				this.scoreModel.position.z = 0
+				this.scoreModel.position.y = 3
+				this.scoreModel.scale.set(2, 2, 2)
+				this.scoreModel.rotation.y = Math.PI / 2
+				scene.add(this.scoreModel)
+			}, undefined, function (error) {
+				console.error(error)
+			})
 		}
 	}
 
@@ -51,6 +80,25 @@ export class Paddle {
 	moveModel(z) {
 		if (this.model) {
 			this.model.position.z = z
+		}
+	}
+	ChangeScore(score, nb) {
+		if (this.scoreModel) {
+			scene.remove(this.scoreModel)
+			if (score < 5)
+			loader.load(this.scores[score].href, (gltf) => {
+				this.scoreModel = gltf.scene
+				this.scoreModel.position.x = 15
+				if (nb === 2)
+					this.scoreModel.position.x = -15
+				this.scoreModel.position.z = 0
+				this.scoreModel.position.y = 3
+				this.scoreModel.scale.set(2, 2, 2)
+				this.scoreModel.rotation.y = Math.PI / 2
+				scene.add(this.scoreModel)
+			}, undefined, function (error) {
+				console.error(error)
+			})
 		}
 	}
 }

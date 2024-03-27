@@ -102,6 +102,9 @@ class GameConsumer(AsyncWebsocketConsumer):
 	# disconnect the client and send the game over message to the clients
 	async def disconnect(self, code):
 		group = await self.getGroup()
+		if group is None:
+			lobby.remove(self)
+			return
 		await self.channel_layer.group_send(
 			group,
 			{"type": "forfeit", "data": {"won": "You won by forfeit"}}

@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import {paddle1, paddle2, ball, scene} from './game.js'
+import {paddle1, paddle2, ball} from './game.js'
 
 export let socket
 /**
@@ -9,14 +9,14 @@ export let socket
 export async function connectToWebSocket() {
 	try
 	{
-		const url = `ws://127.0.0.1:8000/ws/socket-server/`
+		const url = `ws://10.14.6.3:8000/ws/socket-server/`
 		socket = new WebSocket(url)
 		socket.onopen = function() {
 			console.log('WebSocket connection established')
-			// startAudio()
 		}
 		socket.onmessage = function(e) {
 			const data = JSON.parse(e.data)
+			// console.log('WebSocket message received:', data)
 			updateGame(data)
 		}
 		socket.onerror = function (error) {
@@ -32,27 +32,16 @@ export async function connectToWebSocket() {
 	}
 }
 
-function startAudio() {
-	const loadingManager = new THREE.LoadingManager()
-	const audioLoader = new THREE.AudioLoader(loadingManager)
-	const listener = new THREE.AudioListener()
-	const audio = new THREE.Audio(listener)
-	scene.add(listener)
-	audioLoader.load('../assets/audio/eva2.mp3', function(buffer) {
-		audio.setBuffer(buffer)
-		audio.setLoop(true)
-		audio.setVolume(0.5)
-		audio.play()
-	})
+// set the player number for the paddles and start the audio
+function setPlayerNb(playerNb) {
+	paddle1.playerNb = playerNb
+	paddle2.playerNb = playerNb
 }
 
 // update ball position based on the data calculated in the backend
 export function updateGame(data) {
 	if (data['playerNb'])
-	{
-		paddle1.playerNb = playerNb
-		paddle2.playerNb = playerNb
-	}
+		setPlayerNb(data['playerNb'])
 	if (data['ballXPos'])
 		ball.body.position.x = data['ballXPos']
 	if (data['ballZPos'])
@@ -67,17 +56,30 @@ export function updateGame(data) {
 		paddle2.body.position.z = data['player2ZPos']
 		paddle2.moveModel(data['player2ZPos'])
 	}
-	if (data['player1Score'])
+	if (data['player1Score'] || data['player2Score'])
 	{
-		console.log(data['player1Score'])
-		console.log(data['player2Score'])
+		if (paddle1.score != data['player1Score'])
+			paddle1.ChangeScore(data['player1Score'], 1)
+		if (paddle2.score != data['player2Score'])
+			paddle2.ChangeScore(data['player2Score'], 2)
 		paddle1.score = data['player1Score']
 		paddle2.score = data['player2Score']
-		if (paddle1.playerNb === 1 && paddle1.score === 5 || paddle2.playerNb === 2 && paddle2.score === 5)
+	}
+	if (paddle1.score === 5 || paddle2.score === 5)
+	{
+		if (paddle1.score === 5 && paddle1.playerNb === 1)
 			console.log('You won!')
-		else
+		else if (paddle2.score === 5 && paddle1.playerNb === 2)
+			console.log('You won!')
+		else if (paddle2.score === 5 && paddle1.playerNb === 1)
 			console.log('You lost!')
+		else if (paddle1.score === 5 && paddle1.playerNb === 2)
+			console.log('You lost!')
+		socket.close()
 	}
 	if (data["won"])
+	{
 		console.log(data["won"])
+		socket.close()
+	}
 }

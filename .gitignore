@@ -4,3 +4,4 @@ pong/migrations/__pycache__
 pong/templates/dist
 pong/templates/.parcel-cache
 pong/templates/node_modules
+db.sqlite3
