@@ -16,7 +16,6 @@ export async function connectToWebSocket() {
 		}
 		socket.onmessage = function(e) {
 			const data = JSON.parse(e.data)
-			// console.log('WebSocket message received:', data)
 			updateGame(data)
 		}
 		socket.onerror = function (error) {
@@ -37,6 +36,8 @@ function setPlayerNb(playerNb) {
 	paddle1.playerNb = playerNb
 	paddle2.playerNb = playerNb
 }
+
+export let gameover = 0
 
 // update ball position based on the data calculated in the backend
 export function updateGame(data) {
@@ -67,19 +68,20 @@ export function updateGame(data) {
 	}
 	if (paddle1.score === 5 || paddle2.score === 5)
 	{
-		if (paddle1.score === 5 && paddle1.playerNb === 1)
+		if (paddle1.score === 5 && paddle1.playerNb === 1 || paddle2.score === 5 && paddle1.playerNb === 2)
+		{
 			console.log('You won!')
-		else if (paddle2.score === 5 && paddle1.playerNb === 2)
-			console.log('You won!')
-		else if (paddle2.score === 5 && paddle1.playerNb === 1)
+			gameover = 1
+		}
+		else if (paddle2.score === 5 && paddle1.playerNb === 1 || paddle1.score === 5 && paddle1.playerNb === 2)
+		{
 			console.log('You lost!')
-		else if (paddle1.score === 5 && paddle1.playerNb === 2)
-			console.log('You lost!')
-		socket.close()
+			gameover = 3
+		}
 	}
-	if (data["won"])
+	else if (data["won"])
 	{
 		console.log(data["won"])
-		socket.close()
+		gameover = 2
 	}
 }

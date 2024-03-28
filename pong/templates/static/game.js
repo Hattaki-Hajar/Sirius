@@ -3,7 +3,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls'
 import {Arena} from "./arena.js"
 import {Paddle} from "./paddle.js"
 import {Ball} from "./ball.js"
-import {connectToWebSocket, socket} from "./socket.js";
+import {connectToWebSocket, socket, gameover} from "./socket.js";
 import stars from '../assets/stars0.jpg'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader'
 
@@ -140,9 +140,52 @@ function KeyDown(event) {
 	}
 }
 
+let animationID
+// display game over message
+function gameOver() {
+	cancelAnimationFrame(animationID)
+	// const overlay = document.getElementById("endGameOverlay")
+	if (gameover === 1)
+	{
+		document.body.innerHTML = `
+		<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+			<h1 style="color: white;">Game Over</h1>
+			<h2 style="color: white;">You won</h2>
+		</div>
+	`
+	}
+	if (gameover === 2)
+	{
+		document.body.innerHTML = `
+		<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+			<h1 style="color: white;">Game Over</h1>
+			<h2 style="color: white;">You won by forfeit</h2>
+		</div>
+	`
+	}
+	if (gameover === 3)
+	{
+		document.body.innerHTML = `
+		<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+			<h1 style="color: white;">Game Over</h1>
+			<h2 style="color: white;">You lost</h2>
+		</div>
+	`
+	}
+	document.body.style.backgroundColor = "black"
+}
+
 // animation loop function
 function	animate() {
-	requestAnimationFrame( animate )
+	if (gameover)
+	{
+		console.log('Game over')
+		gameOver()
+		socket.close()
+		return
+	}
+	animationID = requestAnimationFrame( animate )
 	renderer.render(scene, camera)
 }
-animate()
+if (!gameover)
+	animate()
